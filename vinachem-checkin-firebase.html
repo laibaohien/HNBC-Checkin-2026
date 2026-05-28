@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in Hội nghị Báo chí – Vinachem</title>
+
+<!-- ============================================================
+  🔥 BƯỚC 1: Điền Firebase config của bạn vào đây
+============================================================ -->
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
+  authDomain: "vinachem-hnbc.firebaseapp.com",
+  databaseURL: "https://vinachem-hnbc-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vinachem-hnbc",
+  storageBucket: "vinachem-hnbc.firebasestorage.app",
+  messagingSenderId: "1038200335558",
+  appId: "1:1038200335558:web:69c5585956c2d452ee7bc7",
+};
+const EVENT_ID = "hoinghi_baochi_2025";
+
+// ============================================================
+//  BƯỚC 2: Đổi mã PIN cho từng vai trò (4–6 chữ số)
+// ============================================================
+const PINS = {
+  checkin : "1111",   // Lễ tân check-in
+  gift    : "2222",   // Người trao quà
+  view    : "3333",   // Điều phối / theo dõi
+};
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#080f1d;color:#e2eaf4;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,214,10,.25);border-radius:3px}
+input::placeholder{color:#4a6077}
+
+/* ══════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════ */
+#login-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;
+}
+.login-logo{
+  width:64px;height:64px;background:#ffd60a;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:32px;color:#001f4d;margin-bottom:16px;
+}
+.login-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px}
+.login-sub{font-size:12px;color:#4a6077;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:40px}
+
+.role-cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:40px}
+.role-card{
+  width:160px;padding:20px 16px;border-radius:14px;
+  border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+  cursor:pointer;text-align:center;transition:all .2s;
+}
+.role-card:hover,.role-card.selected{border-color:var(--c);background:rgba(255,255,255,.07)}
+.role-card.selected{box-shadow:0 0 0 1px var(--c)}
+.role-icon{font-size:32px;margin-bottom:10px}
+.role-name{font-weight:700;font-size:14px;margin-bottom:4px}
+.role-desc{font-size:11px;color:#4a6077;line-height:1.4}
+
+.pin-wrap{text-align:center}
+.pin-label{font-size:12px;color:#607d8b;margin-bottom:10px;letter-spacing:.5px}
+.pin-input{
+  width:160px;padding:14px;text-align:center;letter-spacing:10px;font-size:22px;
+  font-weight:700;background:rgba(255,255,255,.06);border:1px solid rgba(144,202,249,.2);
+  border-radius:10px;color:#e2eaf4;outline:none;font-family:inherit;
+  transition:border-color .2s;
+}
+.pin-input:focus{border-color:#ffd60a}
+.pin-error{color:#ef5350;font-size:12px;margin-top:8px;min-height:18px}
+.login-btn{
+  margin-top:16px;padding:12px 40px;border-radius:22px;border:none;
+  background:linear-gradient(135deg,#ffd60a,#ffb300);color:#001f4d;
+  font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;
+  transition:all .2s;
+}
+.login-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.login-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ══════════════════════════════
+   ROLE BADGE (top-right)
+══════════════════════════════ */
+.role-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;
+  border:1px solid;cursor:pointer;transition:all .2s;
+  letter-spacing:.5px;flex-shrink:0;
+}
+.role-badge:hover{opacity:.8}
+
+/* ══════════════════════════════
+   HEADER
+══════════════════════════════ */
+.header{
+  background:linear-gradient(90deg,#001f4d,#00122e);
+  border-bottom:2.5px solid #ffd60a;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 4px 24px rgba(0,0,0,.6)
+}
+.logo-box{width:44px;height:44px;background:#ffd60a;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#001f4d;flex-shrink:0}
+.header-info{margin-left:14px}
+.header-sub{font-size:10px;letter-spacing:3px;color:#ffd60a;text-transform:uppercase;font-weight:600}
+.header-title{font-size:15px;font-weight:700;margin-top:1px}
+.counter-wrap{text-align:right;flex-shrink:0;margin-right:12px}
+.counter-big{font-size:30px;font-weight:800;color:#ffd60a;line-height:1;font-variant-numeric:tabular-nums}
+.counter-big span{font-size:15px;color:#607d8b;font-weight:400}
+.counter-lbl{font-size:10px;color:#607d8b;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+
+/* ══════════════════════════════
+   BODY
+══════════════════════════════ */
+.body{padding:20px 24px;max-width:980px;margin:0 auto}
+
+.sync-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:11px;color:#4a6077}
+.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s;animation:pulse 2.2s infinite}
+.sync-dot.connecting{background:#ffd60a}.sync-dot.ok{background:#4caf50}.sync-dot.error{background:#ef5350;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.stats-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.stat-card{flex:1 1 110px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:10px 14px;text-align:center}
+.stat-num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat-lbl{font-size:10px;color:#4a6077;margin-top:3px;letter-spacing:.5px}
+
+.search-wrap{position:relative;margin-bottom:12px}
+.search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none}
+.search-input{width:100%;padding:13px 40px 13px 44px;background:rgba(255,255,255,.05);border:1px solid rgba(144,202,249,.18);border-radius:10px;color:#e2eaf4;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+.search-input:focus{border-color:#ffd60a}
+.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#607d8b;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px}
+
+.filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ftab{padding:5px 13px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.09);background:transparent;color:#607d8b;cursor:pointer;transition:all .2s;font-family:inherit}
+.ftab.active{background:rgba(144,202,249,.13);border-color:rgba(144,202,249,.35);color:#90caf9}
+
+.guest-list{display:flex;flex-direction:column;gap:6px}
+.guest-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);transition:background .25s,border-color .25s}
+.guest-card.clickable{cursor:pointer}
+.guest-card.clickable:hover{border-color:rgba(255,214,10,.3);background:rgba(255,255,255,.045)}
+.guest-card.is-in{background:linear-gradient(90deg,rgba(46,125,50,.2),rgba(27,94,32,.08));border-color:rgba(76,175,80,.32)}
+.guest-card.gift-given{background:linear-gradient(90deg,rgba(156,39,176,.15),rgba(106,27,154,.07));border-color:rgba(186,104,200,.35)}
+.stt-badge{width:33px;height:33px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(144,202,249,.08);color:#64b5f6}
+.guest-card.is-in .stt-badge{background:rgba(76,175,80,.2);color:#81c784}
+.guest-card.gift-given .stt-badge{background:rgba(186,104,200,.25);color:#ce93d8}
+.g-info{flex:1;min-width:0}
+.g-name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.guest-card.is-in .g-name{color:#a5d6a7}
+.guest-card.gift-given .g-name{color:#ce93d8}
+.g-title{font-size:11px;color:#546e7a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.org-pill{background:rgba(0,53,102,.55);border:1px solid rgba(144,202,249,.15);border-radius:5px;padding:3px 9px;font-size:10px;color:#90afc5;white-space:nowrap;flex-shrink:0;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+
+.cin-btn{flex-shrink:0;padding:7px 16px;border-radius:7px;border:none;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit;transition:all .2s;min-width:88px}
+.cin-btn.ready{background:linear-gradient(135deg,#ffd60a,#ffb300);color:#001f4d}
+.cin-btn.done{background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3)}
+.view-icon{width:88px;text-align:center;font-size:20px;flex-shrink:0}
+
+.gift-col{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.gift-amount-input{width:120px;padding:6px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(186,104,200,.3);border-radius:7px;color:#e2eaf4;font-size:12px;font-family:inherit;outline:none;text-align:right;transition:border-color .2s}
+.gift-amount-input:focus{border-color:#ce93d8}
+.gift-save-btn{padding:6px 13px;border-radius:7px;border:none;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit;background:linear-gradient(135deg,#9c27b0,#7b1fa2);color:#fff;transition:all .2s}
+.gift-save-btn:hover{filter:brightness(1.15)}
+.gift-done-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:7px;background:rgba(156,39,176,.12);border:1px solid rgba(186,104,200,.25);font-size:12px;color:#ce93d8;font-weight:600;cursor:pointer;white-space:nowrap}
+
+.gift-summary{background:linear-gradient(135deg,rgba(106,27,154,.22),rgba(74,0,130,.12));border:1px solid rgba(186,104,200,.3);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.gift-summary-title{font-size:11px;letter-spacing:2px;color:#ce93d8;text-transform:uppercase;font-weight:700;margin-bottom:12px}
+.gift-summary-row{display:flex;gap:16px;flex-wrap:wrap}
+.gift-stat{flex:1 1 120px;text-align:center}
+.gift-stat-val{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.gift-stat-lbl{font-size:10px;color:#7b6b8a;margin-top:3px}
+.total-money{font-size:24px;font-weight:800;color:#ffd60a;font-variant-numeric:tabular-nums}
+
+.preset-row{margin-bottom:14px}
+.preset-row-label{font-size:11px;color:#7b6b8a;margin-bottom:8px;letter-spacing:.5px}
+.preset-btns{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{padding:6px 12px;border-radius:7px;border:1px solid rgba(186,104,200,.3);background:rgba(156,39,176,.1);color:#ce93d8;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.preset-btn:hover,.preset-btn.active-p{background:rgba(156,39,176,.3);border-color:#ce93d8;color:#fff}
+
+.toast{border-radius:10px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;animation:slideIn .3s ease}
+.toast.checkin{background:linear-gradient(90deg,#1b5e20,#2e7d32);border:1px solid #4caf50}
+.toast.gift{background:linear-gradient(90deg,#4a148c,#6a1b9a);border:1px solid #ce93d8}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.toast-name{font-weight:700;font-size:14px}
+.toast-sub{font-size:11px;margin-top:2px;opacity:.85}
+
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,.06);border-radius:3px;margin-bottom:18px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,#ffd60a,#4caf50);border-radius:3px;transition:width .5s ease}
+.empty-msg{text-align:center;padding:52px 20px;color:#344955;font-size:13px}
+.footer{margin-top:30px;text-align:center;font-size:10px;color:#1c2b35;letter-spacing:2px;padding-bottom:20px;text-transform:uppercase}
+.hidden{display:none!important}
+
+/* VIEW MODE — readonly notice */
+.readonly-notice{
+  background:rgba(144,202,249,.07);border:1px solid rgba(144,202,249,.18);
+  border-radius:8px;padding:10px 16px;margin-bottom:14px;
+  font-size:12px;color:#64b5f6;display:flex;align-items:center;gap:8px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-logo">V</div>
+  <div class="login-title">Hội nghị Báo chí – Vinachem</div>
+  <div class="login-sub">Chọn vai trò của bạn để tiếp tục</div>
+
+  <div class="role-cards">
+    <div class="role-card" style="--c:#ffd60a" id="rc-checkin" onclick="selectRole('checkin')">
+      <div class="role-icon">📋</div>
+      <div class="role-name" style="color:#ffd60a">Lễ tân</div>
+      <div class="role-desc">Check-in khách mời khi vào hội trường</div>
+    </div>
+    <div class="role-card" style="--c:#ce93d8" id="rc-gift" onclick="selectRole('gift')">
+      <div class="role-icon">🎁</div>
+      <div class="role-name" style="color:#ce93d8">Trao quà</div>
+      <div class="role-desc">Ghi nhận quà tặng cho từng khách</div>
+    </div>
+    <div class="role-card" style="--c:#90caf9" id="rc-view" onclick="selectRole('view')">
+      <div class="role-icon">👁</div>
+      <div class="role-name" style="color:#90caf9">Điều phối</div>
+      <div class="role-desc">Theo dõi tổng thể — chỉ xem</div>
+    </div>
+  </div>
+
+  <div class="pin-wrap">
+    <div class="pin-label" id="pin-label">← Chọn vai trò trước</div>
+    <input class="pin-input" id="pin-input" type="password" inputmode="numeric"
+      maxlength="6" placeholder="••••" disabled
+      oninput="onPinInput()" onkeydown="if(event.key==='Enter') doLogin()">
+    <div class="pin-error" id="pin-error"></div>
+    <br>
+    <button class="login-btn" id="login-btn" onclick="doLogin()" disabled>Vào hệ thống →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN APP (ẩn cho đến khi login)
+══════════════════════════════════════ -->
+<div id="app-screen" class="hidden">
+
+  <div class="header">
+    <div style="display:flex;align-items:center">
+      <div class="logo-box">V</div>
+      <div class="header-info">
+        <div class="header-sub">Tập đoàn Hóa chất Việt Nam · Vinachem</div>
+        <div class="header-title" id="app-header-title">CHECK-IN KHÁCH MỜI HỘI NGHỊ BÁO CHÍ</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="counter-wrap">
+        <div class="counter-big" id="ctr-num">—<span id="ctr-denom">/66</span></div>
+        <div class="counter-lbl" id="ctr-lbl">Đã check-in</div>
+      </div>
+      <!-- Badge vai trò + nút thoát -->
+      <div class="role-badge" id="role-badge" onclick="logout()" title="Bấm để đăng xuất"></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div id="toast-area"></div>
+
+    <div class="sync-bar">
+      <div class="sync-dot connecting" id="sync-dot"></div>
+      <span id="sync-lbl">Đang kết nối Firebase...</span>
+    </div>
+
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+    <!-- STATS: checkin & view -->
+    <div id="stats-checkin" class="stats-row">
+      <div class="stat-card"><div class="stat-num" style="color:#90caf9" id="s-total">66</div><div class="stat-lbl">Tổng khách</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#4caf50" id="s-in">0</div><div class="stat-lbl">Đã vào</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#ff8a65" id="s-out">66</div><div class="stat-lbl">Chưa vào</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#ffd60a" id="s-found">66</div><div class="stat-lbl">Kết quả tìm</div></div>
+    </div>
+
+    <!-- STATS: gift -->
+    <div id="stats-gift" class="gift-summary hidden">
+      <div class="gift-summary-title">🎁 Thống kê Trao quà</div>
+      <div class="gift-summary-row">
+        <div class="gift-stat"><div class="gift-stat-val" style="color:#81c784" id="g-present">0</div><div class="gift-stat-lbl">Khách đã vào</div></div>
+        <div class="gift-stat"><div class="gift-stat-val" style="color:#ce93d8" id="g-gifted">0</div><div class="gift-stat-lbl">Đã trao quà</div></div>
+        <div class="gift-stat"><div class="gift-stat-val" style="color:#ff8a65" id="g-pending">0</div><div class="gift-stat-lbl">Chưa trao</div></div>
+        <div class="gift-stat"><div class="total-money" id="g-total">0 ₫</div><div class="gift-stat-lbl">Tổng giá trị</div></div>
+      </div>
+    </div>
+
+    <!-- READONLY NOTICE: view mode -->
+    <div id="readonly-notice" class="readonly-notice hidden">
+      👁 &nbsp;Chế độ <strong>Theo dõi</strong> — chỉ xem, không thể thao tác. Dữ liệu cập nhật realtime.
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input class="search-input" id="search-inp" placeholder="Tìm theo tên khách mời, chức danh, tên báo / cơ quan..." oninput="onSearch()">
+      <button class="clear-btn" onclick="clearSearch()">×</button>
+    </div>
+
+    <!-- FILTER: checkin / view -->
+    <div id="filter-checkin" class="filter-row hidden">
+      <button class="ftab active" id="f-all" onclick="setFilter('all')">Tất cả</button>
+      <button class="ftab" id="f-out" onclick="setFilter('out')">Chưa check-in</button>
+      <button class="ftab" id="f-in"  onclick="setFilter('in')">Đã check-in</button>
+    </div>
+
+    <!-- FILTER: gift -->
+    <div id="filter-gift" class="filter-row hidden">
+      <button class="ftab active" id="fg-all"     onclick="setGiftFilter('all')">Tất cả đã vào</button>
+      <button class="ftab"        id="fg-pending"  onclick="setGiftFilter('pending')">Chưa trao quà</button>
+      <button class="ftab"        id="fg-done"     onclick="setGiftFilter('done')">Đã trao quà</button>
+    </div>
+
+    <!-- PRESET: gift -->
+    <div id="preset-row" class="preset-row hidden">
+      <div class="preset-row-label">⚡ Mức quà mặc định:</div>
+      <div class="preset-btns">
+        <button class="preset-btn active-p" id="pr-500k" onclick="setPreset(500000)">500.000 ₫</button>
+        <button class="preset-btn" id="pr-1m"   onclick="setPreset(1000000)">1.000.000 ₫</button>
+        <button class="preset-btn" id="pr-2m"   onclick="setPreset(2000000)">2.000.000 ₫</button>
+        <button class="preset-btn" id="pr-3m"   onclick="setPreset(3000000)">3.000.000 ₫</button>
+        <button class="preset-btn" id="pr-5m"   onclick="setPreset(5000000)">5.000.000 ₫</button>
+      </div>
+    </div>
+
+    <div class="guest-list" id="guest-list"></div>
+    <div class="footer">Vinachem · Hội nghị Báo chí · Ban Truyền thông &amp; Phát triển</div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   GUEST DATA
+══════════════════════════════════════ */
+const GUESTS = [
+  [1,"Ông Lê Quốc Minh","Ủy viên TW Đảng, Tổng BT Báo Nhân Dân, Chủ tịch Hội Nhà báo VN","Báo Nhân Dân"],
+  [2,"Bà Đinh Thị Mai","Phó trưởng Ban Tuyên giáo và Dân vận Trung ương","Ban Tuyên giáo TW"],
+  [3,"Ông Nguyễn Đức Lợi","Phó Chủ tịch thường trực Hội Nhà báo Việt Nam","Hội Nhà báo VN"],
+  [4,"Nhà báo Thuận Hữu","Nguyên Tổng BT Báo Nhân Dân, Phó Ban Tuyên giáo TW","Báo Nhân Dân"],
+  [5,"Ông Nguyễn Văn Hùng","Nguyên Vụ trưởng Vụ báo chí, Ban tuyên giáo Trung ương","Ban Tuyên giáo"],
+  [6,"Ông Lưu Đình Phúc","Cục trưởng Cục Báo chí – Bộ VH, Thể thao & Du lịch","Bộ VH-TT&DL"],
+  [7,"Bà Đặng Thị Phương Thảo","Phó Cục trưởng Cục Báo chí – Bộ VH, Thể thao & Du lịch","Bộ VH-TT&DL"],
+  [8,"Ông Nguyễn Thanh Lâm","Tổng Giám đốc Đài Truyền hình Quốc gia","Đài THQG"],
+  [9,"Ông Nguyễn Hồng Sâm","Tổng GĐ Cổng TTĐT Chính phủ, Tổng BT Báo ĐT Chính phủ","Báo ĐT Chính phủ"],
+  [10,"Bà Phan Thị Thùy Trâm","Phó Tổng GĐ Cổng Thông tin điện tử Chính phủ","Cổng TTĐT CP"],
+  [11,"Ông Phạm Chí Thanh","Chánh Văn phòng – Bộ Tài chính","Bộ Tài chính"],
+  [12,"Ông Phạm Minh Tuấn","Phó Chánh Văn phòng – Bộ Tài chính","Bộ Tài chính"],
+  [13,"Bà Mai Thị Hằng Thu","Phó Trưởng Phòng Truyền thông – Bộ Tài chính","Bộ Tài chính"],
+  [14,"Ông Quế Đình Nguyên","Phó Tổng Biên tập Báo Nhân Dân","Báo Nhân Dân"],
+  [15,"Ông Phan Văn Hùng","Phó Tổng Biên tập Báo Nhân Dân","Báo Nhân Dân"],
+  [16,"Ông Phùng Công Sưởng","Tổng Biên tập Báo Tiền Phong","Báo Tiền Phong"],
+  [17,"Ông Lê Minh Toản","Phó Tổng Biên tập Báo Tiền Phong","Báo Tiền Phong"],
+  [18,"Ông Nguyễn Ngọc Toàn","Tổng Biên tập Báo Thanh Niên","Báo Thanh Niên"],
+  [19,"Ông Phạm Văn Hoành","Tổng Biên tập Báo Tài chính Đầu tư","Báo TC Đầu tư"],
+  [20,"Ông Lê Trọng Minh","Phó Tổng BT Báo Tài chính Đầu tư","Báo TC Đầu tư"],
+  [21,"Ông Ngô Chí Tùng","Phó Tổng BT Báo Tài chính Đầu tư","Báo TC Đầu tư"],
+  [22,"Ông Phạm Thu Phong","Tổng BT Tạp chí Kinh tế – Tài chính","Tạp chí KT-TC"],
+  [23,"Ông Trần Đức Vinh","Tổng Biên tập Báo Công lý","Báo Công lý"],
+  [24,"Ông Phạm Tuấn Anh","Tổng Biên tập Báo Dân trí","Báo Dân trí"],
+  [25,"Thượng tá Nguyễn Thanh Bình","Tổng Biên tập Báo Công an Nhân dân","Báo CAND"],
+  [26,"Ông Dương Đức Đà Trang","Báo Tuổi Trẻ TP.HCM","Báo Tuổi Trẻ"],
+  [27,"Ông Lê Thế Chữ","Tổng Biên tập Báo Tuổi Trẻ TP.HCM","Báo Tuổi Trẻ"],
+  [28,"Ông Phạm Quốc Huy","Tổng BT Tạp chí Đời sống Pháp luật","Tạp chí ĐSPL"],
+  [29,"Ông Nguyễn Ngọc Hiển","Tổng Biên tập Báo Lao Động","Báo Lao Động"],
+  [30,"Ông Nguyễn Đức Thành","Phó Tổng Biên tập Báo Lao Động","Báo Lao Động"],
+  [31,"Ông Vũ Hoài Nam","Tổng Biên tập Báo Pháp luật Việt Nam","Báo PLVN"],
+  [32,"Ông Nguyễn Văn Bá","Tổng Biên tập Báo Vietnamnet","Báo Vietnamnet"],
+  [33,"Ông Phạm Văn Hiếu","Tổng Biên tập Báo VnExpress","Báo VnExpress"],
+  [34,"Ông Lê Trần Nguyên Huy","Tổng BT Báo Nhà báo và Công luận","Báo NB&CL"],
+  [35,"Ông Trương Thành Trung","Tổng Biên tập Báo Đại Đoàn Kết","Báo Đại Đoàn Kết"],
+  [36,"Ông Nguyễn Văn Dũng","Phó Tổng BT Báo Đại Đoàn Kết","Báo Đại Đoàn Kết"],
+  [37,"Ông Nguyễn Tuấn Anh","Tổng Biên tập Báo Thanh Tra","Báo Thanh Tra"],
+  [38,"Ông Chu Văn Thủy","Phó Tổng Biên tập Báo Thanh Tra","Báo Thanh Tra"],
+  [39,"Ông Nguyễn Văn Hoài","Tổng BT Báo Nông thôn Ngày nay","Báo NTNN"],
+  [40,"Ông Nguyễn Văn Minh","Tổng Biên tập Báo Công Thương","Báo Công Thương"],
+  [41,"Ông Nguyễn Tiến Cường","Phó Tổng BT Báo Công Thương","Báo Công Thương"],
+  [42,"Bà Phạm Thị Lệ Nhung","Tổng BT Tạp chí Công Thương","Tạp chí CT"],
+  [43,"Ông Nguyễn Văn Thắng","Tổng BT Báo Bảo vệ Pháp luật","Báo BVPL"],
+  [44,"Ông Nguyễn Ngọc Thạch","Tổng BT Báo Nông nghiệp & Môi trường","Báo NN&MT"],
+  [45,"Ông Lê Trọng Đảm","Phó Tổng BT Báo Nông nghiệp & Môi trường","Báo NN&MT"],
+  [46,"Bà Phạm Thị Thanh Huyền","Tổng BT Báo Đại biểu Nhân dân","Báo ĐBND"],
+  [47,"Bà Nguyễn Thị Quỳnh Minh","Tổng Biên tập Báo Kiểm toán","Báo Kiểm toán"],
+  [48,"Bà Chử Thị Hạnh","Tổng BT Tạp chí Kinh tế Việt Nam","Tạp chí KTVN"],
+  [49,"Ông Lưu Quang Vĩnh","Phó TBT Tạp chí Năng lượng sạch VN","Tạp chí NLSVN"],
+  [50,"Ông Trần Tiến Duẩn","Tổng biên tập Báo Vietnamplus","Báo Vietnamplus"],
+  [51,"Bà Vũ Thanh Thủy","Tổng biên tập Thời báo VTV","Thời báo VTV"],
+  [52,"Ông Hoàng Văn Vững","Tổng BT Tạp chí Tiếp thị & Gia đình","Tạp chí TT&GĐ"],
+  [53,"Ông Vũ Đức Thuận","Tổng BT Tạp chí Thương hiệu & Công luận","Tạp chí TH&CL"],
+  [54,"Ông Nguyễn Linh Anh","Tổng BT Tạp chí Diễn đàn Doanh nghiệp","Tạp chí DĐDN"],
+  [55,"Ông Nguyễn Đăng Học","Trưởng Ban Chương trình, Đài THVN","Đài THVN"],
+  [56,"Ông Nguyễn Hồng Phúc","Phó Trưởng Ban Thời sự, Đài THVN","Đài THVN"],
+  [57,"Bà Nguyễn Phương Mai","Trưởng Ban Thời sự, Đài THVN","Đài THVN"],
+  [58,"Trung tá Chu Quốc Dũng","Trưởng BBT Báo An ninh Thủ đô","Báo ANTĐ"],
+  [59,"Ông Trần Ngọc Tú","Trưởng BBT tin trong nước, TTXVN","TTXVN"],
+  [60,"Ông Phạm Quang Minh","Giám đốc Báo CafeF","Báo CafeF"],
+  [61,"Phóng viên A Huân","Phóng viên","—"],
+  [62,"Phóng viên C Duyên","Phóng viên","—"],
+  [63,"Phóng viên C Bản","Phóng viên","—"],
+  [64,"Phóng viên Châm","Phóng viên","—"],
+  [65,"A Linh","Phó Ban – Thời báo VTV","Thời báo VTV"],
+  [66,"Thái","Phó Ban – Báo TC&ĐT","Báo TC Đầu tư"],
+];
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let currentRole  = null;   // 'checkin' | 'gift' | 'view'
+let checkedIn    = {};
+let gifts        = {};
+let filterMode   = 'all';
+let giftFilter   = 'all';
+let searchQ      = '';
+let defaultPreset= 500000;
+let pendingGift  = {};
+let toastTimer   = null;
+let db           = null;
+let fbListeners  = [];
+
+const ROLE_META = {
+  checkin : { label:'Lễ tân',    icon:'📋', color:'#ffd60a', headerTitle:'CHECK-IN KHÁCH MỜI' },
+  gift    : { label:'Trao quà',  icon:'🎁', color:'#ce93d8', headerTitle:'TRAO QUÀ KHÁCH MỜI' },
+  view    : { label:'Điều phối', icon:'👁', color:'#90caf9', headerTitle:'THEO DÕI TỔNG THỂ'  },
+};
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+let selectedRole = null;
+
+function selectRole(role){
+  selectedRole = role;
+  ['checkin','gift','view'].forEach(r=>{
+    const el = document.getElementById('rc-'+r);
+    el.classList.toggle('selected', r===role);
+  });
+  const meta = ROLE_META[role];
+  document.getElementById('pin-label').textContent = `Nhập mã PIN cho vai trò "${meta.label}"`;
+  const pinEl = document.getElementById('pin-input');
+  pinEl.disabled = false;
+  pinEl.value = '';
+  pinEl.focus();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('login-btn').disabled = false;
+}
+
+function onPinInput(){
+  document.getElementById('pin-error').textContent = '';
+}
+
+function doLogin(){
+  if(!selectedRole) return;
+  const entered = document.getElementById('pin-input').value.trim();
+  if(entered === PINS[selectedRole]){
+    enterApp(selectedRole);
+  } else {
+    document.getElementById('pin-error').textContent = '❌ Mã PIN không đúng, thử lại';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function enterApp(role){
+  currentRole = role;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+
+  // Role badge
+  const meta = ROLE_META[role];
+  const badge = document.getElementById('role-badge');
+  badge.style.color       = meta.color;
+  badge.style.borderColor = meta.color + '55';
+  badge.style.background  = meta.color + '15';
+  badge.innerHTML         = `${meta.icon} ${meta.label} &nbsp;<span style="opacity:.5;font-size:10px">Đăng xuất</span>`;
+  document.getElementById('app-header-title').textContent = meta.headerTitle;
+
+  // Show/hide UI sections per role
+  if(role === 'checkin'){
+    show('stats-checkin'); hide('stats-gift'); hide('readonly-notice');
+    show('filter-checkin'); hide('filter-gift'); hide('preset-row');
+    document.getElementById('ctr-lbl').textContent = 'Đã check-in';
+  } else if(role === 'gift'){
+    hide('stats-checkin'); show('stats-gift'); hide('readonly-notice');
+    hide('filter-checkin'); show('filter-gift'); show('preset-row');
+    document.getElementById('ctr-lbl').textContent = 'Đã trao quà';
+  } else {
+    show('stats-checkin'); hide('stats-gift'); show('readonly-notice');
+    show('filter-checkin'); hide('filter-gift'); hide('preset-row');
+    document.getElementById('ctr-lbl').textContent = 'Đã check-in';
+  }
+
+  initFirebase();
+}
+
+function logout(){
+  if(!confirm('Đăng xuất và quay về màn hình chọn vai trò?')) return;
+  // Detach firebase listeners
+  fbListeners.forEach(fn => fn());
+  fbListeners = [];
+  currentRole = null;
+  selectedRole = null;
+  checkedIn = {}; gifts = {}; pendingGift = {};
+  searchQ = ''; filterMode = 'all'; giftFilter = 'all';
+  document.getElementById('search-inp').value = '';
+  document.getElementById('pin-input').value = '';
+  ['checkin','gift','view'].forEach(r => document.getElementById('rc-'+r).classList.remove('selected'));
+  document.getElementById('pin-label').textContent = '← Chọn vai trò trước';
+  document.getElementById('login-btn').disabled = true;
+  document.getElementById('pin-input').disabled = true;
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════
+   FIREBASE
+══════════════════════════════════════ */
+function initFirebase(){
+  try {
+    if(FIREBASE_CONFIG.apiKey.includes('PASTE_YOUR')){
+      setSyncState('error','⚠️ Chưa cấu hình Firebase — mở file HTML và điền FIREBASE_CONFIG');
+      return;
+    }
+    // Tái sử dụng app nếu đã init
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    setSyncState('connecting','Đang kết nối Firebase...');
+
+    const base = `events/${EVENT_ID}`;
+    const offC = db.ref(`${base}/checkin`).on('value', snap=>{
+      checkedIn = snap.val() || {};
+      setSyncState('ok','Firebase Realtime · '+new Date().toLocaleTimeString('vi-VN'));
+      render();
+    }, err=>setSyncState('error','Lỗi: '+err.message));
+
+    const offG = db.ref(`${base}/gifts`).on('value', snap=>{
+      gifts = snap.val() || {};
+      render();
+    });
+
+    // Lưu hàm detach để dùng khi logout
+    fbListeners.push(()=> db.ref(`${base}/checkin`).off('value', offC));
+    fbListeners.push(()=> db.ref(`${base}/gifts`).off('value', offG));
+
+  } catch(e){ setSyncState('error','Lỗi Firebase: '+e.message); }
+}
+
+function setSyncState(s,m){
+  document.getElementById('sync-dot').className='sync-dot '+s;
+  document.getElementById('sync-lbl').textContent=m;
+}
+
+function writeCheckin(stt,val){ if(db) db.ref(`events/${EVENT_ID}/checkin/${stt}`).set(val); }
+function writeGift(stt,val){
+  if(!db) return;
+  val===null ? db.ref(`events/${EVENT_ID}/gifts/${stt}`).remove()
+             : db.ref(`events/${EVENT_ID}/gifts/${stt}`).set(val);
+}
+
+/* ══════════════════════════════════════
+   ACTIONS — kiểm tra vai trò trước khi thực hiện
+══════════════════════════════════════ */
+function toggleGuest(stt){
+  if(currentRole !== 'checkin') return;
+  const newVal = !checkedIn[stt];
+  checkedIn[stt] = newVal;
+  if(newVal) showToast(stt,'checkin');
+  render();
+  writeCheckin(stt, newVal);
+}
+
+function saveGift(stt){
+  if(currentRole !== 'gift') return;
+  const el = document.getElementById('gi-'+stt);
+  if(!el) return;
+  const amount = parseInt(el.value.replace(/[^\d]/g,'')) || 0;
+  if(amount<=0){ alert('Vui lòng nhập số tiền hợp lệ'); return; }
+  gifts[stt] = amount;
+  delete pendingGift[stt];
+  showToast(stt,'gift');
+  render();
+  writeGift(stt, amount);
+}
+
+function removeGift(stt){
+  if(currentRole !== 'gift') return;
+  delete gifts[stt];
+  render();
+  writeGift(stt, null);
+}
+
+function onGiftInput(stt){
+  const el = document.getElementById('gi-'+stt);
+  if(el) pendingGift[stt] = el.value;
+}
+
+function setPreset(val){
+  defaultPreset = val;
+  const map={500000:'pr-500k',1000000:'pr-1m',2000000:'pr-2m',3000000:'pr-3m',5000000:'pr-5m'};
+  Object.entries(map).forEach(([v,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.className='preset-btn'+(parseInt(v)===val?' active-p':'');
+  });
+  GUESTS.forEach(g=>{
+    const el=document.getElementById('gi-'+g[0]);
+    if(el && !pendingGift[g[0]]) el.value=val.toLocaleString('vi-VN');
+  });
+}
+
+function showToast(stt,type){
+  const g=GUESTS.find(x=>x[0]===stt); if(!g) return;
+  if(toastTimer) clearTimeout(toastTimer);
+  const isGift=type==='gift';
+  document.getElementById('toast-area').innerHTML=
+    `<div class="toast ${isGift?'gift':'checkin'}">
+      <span style="font-size:22px">${isGift?'🎁':'✅'}</span>
+      <div>
+        <div class="toast-name">${g[1]}</div>
+        <div class="toast-sub">${isGift?'Đã trao: '+fmtMoney(gifts[stt]||0):g[3]+' · Check-in thành công'}</div>
+      </div>
+    </div>`;
+  toastTimer=setTimeout(()=>{ document.getElementById('toast-area').innerHTML=''; },3800);
+}
+
+/* ══════════════════════════════════════
+   FILTERS & SEARCH
+══════════════════════════════════════ */
+function setFilter(f){
+  filterMode=f;
+  ['all','out','in'].forEach(x=>document.getElementById('f-'+x).className='ftab'+(f===x?' active':''));
+  render();
+}
+function setGiftFilter(f){
+  giftFilter=f;
+  ['all','pending','done'].forEach(x=>document.getElementById('fg-'+x).className='ftab'+(f===x?' active':''));
+  render();
+}
+function onSearch(){ searchQ=document.getElementById('search-inp').value; render(); }
+function clearSearch(){ document.getElementById('search-inp').value=''; searchQ=''; render(); }
+
+function norm(s){ return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function fmtMoney(n){ return n.toLocaleString('vi-VN')+' ₫'; }
+
+function getFiltered(){
+  let list=GUESTS;
+  if(searchQ.trim()){ const q=norm(searchQ.trim()); list=list.filter(g=>norm(g[1]).includes(q)||norm(g[2]).includes(q)||norm(g[3]).includes(q)); }
+  if(currentRole==='gift'){
+    list=list.filter(g=>!!checkedIn[g[0]]);
+    if(giftFilter==='done')    list=list.filter(g=>!!gifts[g[0]]);
+    if(giftFilter==='pending') list=list.filter(g=>!gifts[g[0]]);
+  } else {
+    if(filterMode==='in')  list=list.filter(g=>!!checkedIn[g[0]]);
+    if(filterMode==='out') list=list.filter(g=>!checkedIn[g[0]]);
+  }
+  return list;
+}
+
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+function render(){
+  if(!currentRole) return;
+  const totalIn    = Object.values(checkedIn).filter(Boolean).length;
+  const totalGifted= Object.keys(gifts).filter(k=>!!checkedIn[parseInt(k)]&&(gifts[k]||0)>0).length;
+  const totalMoney = Object.entries(gifts).reduce((s,[k,v])=>checkedIn[parseInt(k)]?s+(v||0):s,0);
+  const filtered   = getFiltered();
+  const pct        = GUESTS.length ? totalIn/GUESTS.length*100 : 0;
+
+  const hNum   = currentRole==='gift' ? totalGifted : totalIn;
+  const hDenom = currentRole==='gift' ? totalIn : GUESTS.length;
+  document.getElementById('ctr-num').innerHTML = hNum+'<span>/'+hDenom+'</span>';
+  document.getElementById('progress-bar').style.width = pct.toFixed(1)+'%';
+
+  document.getElementById('s-total').textContent = GUESTS.length;
+  document.getElementById('s-in').textContent    = totalIn;
+  document.getElementById('s-out').textContent   = GUESTS.length-totalIn;
+  document.getElementById('s-found').textContent = filtered.length;
+
+  document.getElementById('g-present').textContent = totalIn;
+  document.getElementById('g-gifted').textContent  = totalGifted;
+  document.getElementById('g-pending').textContent = totalIn-totalGifted;
+  document.getElementById('g-total').textContent   = fmtMoney(totalMoney);
+
+  document.getElementById('f-all').textContent = `Tất cả (${GUESTS.length})`;
+  document.getElementById('f-out').textContent = `Chưa check-in (${GUESTS.length-totalIn})`;
+  document.getElementById('f-in').textContent  = `Đã check-in (${totalIn})`;
+  document.getElementById('fg-all').textContent     = `Tất cả đã vào (${totalIn})`;
+  document.getElementById('fg-pending').textContent = `Chưa trao quà (${totalIn-totalGifted})`;
+  document.getElementById('fg-done').textContent    = `Đã trao quà (${totalGifted})`;
+
+  const listEl = document.getElementById('guest-list');
+  if(!filtered.length){
+    listEl.innerHTML=`<div class="empty-msg">${currentRole==='gift'?'Chưa có khách nào check-in, hoặc không tìm thấy.':'Không tìm thấy khách mời phù hợp'}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(g=>{
+    const isIn   = !!checkedIn[g[0]];
+    const giftAmt= gifts[g[0]]||0;
+    const hasGift= giftAmt>0;
+
+    if(currentRole==='checkin') return `
+      <div class="guest-card ${isIn?'is-in':''} clickable" onclick="toggleGuest(${g[0]})">
+        <div class="stt-badge">${g[0]}</div>
+        <div class="g-info"><div class="g-name">${g[1]}</div><div class="g-title">${g[2]}</div></div>
+        <div class="org-pill">${g[3]}</div>
+        <button class="cin-btn ${isIn?'done':'ready'}" onclick="event.stopPropagation();toggleGuest(${g[0]})">${isIn?'✓ Đã vào':'Check-in'}</button>
+      </div>`;
+
+    if(currentRole==='view') return `
+      <div class="guest-card ${isIn?'is-in':''}">
+        <div class="stt-badge">${g[0]}</div>
+        <div class="g-info"><div class="g-name">${g[1]}</div><div class="g-title">${g[2]}</div></div>
+        <div class="org-pill">${g[3]}</div>
+        <div class="view-icon">${isIn?'✅':'<span style="opacity:.2">⬜</span>'}</div>
+      </div>`;
+
+    // GIFT
+    if(hasGift) return `
+      <div class="guest-card gift-given">
+        <div class="stt-badge">${g[0]}</div>
+        <div class="g-info"><div class="g-name">${g[1]}</div><div class="g-title">${g[2]}</div></div>
+        <div class="org-pill">${g[3]}</div>
+        <div class="gift-done-badge" onclick="removeGift(${g[0]})" title="Bấm để sửa">🎁 ${fmtMoney(giftAmt)} <span style="font-size:10px;opacity:.5;margin-left:4px">✎</span></div>
+      </div>`;
+
+    const curVal = pendingGift[g[0]]!==undefined ? pendingGift[g[0]] : defaultPreset.toLocaleString('vi-VN');
+    return `
+      <div class="guest-card is-in">
+        <div class="stt-badge">${g[0]}</div>
+        <div class="g-info"><div class="g-name">${g[1]}</div><div class="g-title">${g[2]}</div></div>
+        <div class="gift-col">
+          <input class="gift-amount-input" id="gi-${g[0]}" value="${curVal}"
+            oninput="onGiftInput(${g[0]})"
+            onkeydown="if(event.key==='Enter') saveGift(${g[0]})"
+            placeholder="Số tiền (₫)">
+          <button class="gift-save-btn" onclick="saveGift(${g[0]})">🎁 Trao quà</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
+</script>
+</body>
+</html>
