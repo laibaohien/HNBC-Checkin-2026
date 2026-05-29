@@ -10,13 +10,13 @@
 ============================================================ -->
 <script>
 const FIREBASE_CONFIG = {
-  apiKey:            "PASTE_YOUR_apiKey_HERE",
-  authDomain:        "PASTE_YOUR_authDomain_HERE",
-  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
-  projectId:         "PASTE_YOUR_projectId_HERE",
-  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
-  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
-  appId:             "PASTE_YOUR_appId_HERE",
+apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
+  authDomain: "vinachem-hnbc.firebaseapp.com",
+  databaseURL: "https://vinachem-hnbc-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vinachem-hnbc",
+  storageBucket: "vinachem-hnbc.firebasestorage.app",
+  messagingSenderId: "1038200335558",
+  appId: "1:1038200335558:web:69c5585956c2d452ee7bc7",
 };
 const EVENT_ID = "hoinghi_baochi_2025";
 
@@ -645,7 +645,48 @@ function setGiftFilter(f){
 function onSearch(){ searchQ=document.getElementById('search-inp').value; render(); }
 function clearSearch(){ document.getElementById('search-inp').value=''; searchQ=''; render(); }
 
-function norm(s){ return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function norm(s){
+  if(!s) return '';
+  // Bảng chuyển đổi ký tự tiếng Việt → không dấu
+  const map = {
+    'à':'a','á':'a','â':'a','ã':'a','ä':'a','å':'a',
+    'ầ':'a','ấ':'a','ẩ':'a','ẫ':'a','ậ':'a',
+    'ằ':'a','ắ':'a','ẳ':'a','ẵ':'a','ặ':'a',
+    'ă':'a','ā':'a',
+    'è':'e','é':'e','ê':'e','ế':'e','ề':'e','ể':'e','ễ':'e','ệ':'e',
+    'ì':'i','í':'i','ị':'i','ỉ':'i','ĩ':'i',
+    'ò':'o','ó':'o','ô':'o','ố':'o','ồ':'o','ổ':'o','ỗ':'o','ộ':'o',
+    'ơ':'o','ớ':'o','ờ':'o','ở':'o','ỡ':'o','ợ':'o',
+    'ù':'u','ú':'u','ư':'u','ứ':'u','ừ':'u','ử':'u','ữ':'u','ự':'u',
+    'ũ':'u','ū':'u',
+    'ỳ':'y','ý':'y','ỵ':'y','ỷ':'y','ỹ':'y',
+    'đ':'d',
+    'À':'a','Á':'a','Â':'a','Ã':'a','Ä':'a','Å':'a',
+    'Ầ':'a','Ấ':'a','Ẩ':'a','Ẫ':'a','Ậ':'a',
+    'Ằ':'a','Ắ':'a','Ẳ':'a','Ẵ':'a','Ặ':'a',
+    'Ă':'a','Ā':'a',
+    'È':'e','É':'e','Ê':'e','Ế':'e','Ề':'e','Ể':'e','Ễ':'e','Ệ':'e',
+    'Ì':'i','Í':'i','Ị':'i','Ỉ':'i','Ĩ':'i',
+    'Ò':'o','Ó':'o','Ô':'o','Ố':'o','Ồ':'o','Ổ':'o','Ỗ':'o','Ộ':'o',
+    'Ơ':'o','Ớ':'o','Ờ':'o','Ở':'o','Ỡ':'o','Ợ':'o',
+    'Ù':'u','Ú':'u','Ư':'u','Ứ':'u','Ừ':'u','Ử':'u','Ữ':'u','Ự':'u',
+    'Ũ':'u','Ū':'u',
+    'Ỳ':'y','Ý':'y','Ỵ':'y','Ỷ':'y','Ỹ':'y',
+    'Đ':'d',
+    // bổ sung thêm
+    'ạ':'a','ả':'a','Ạ':'a','Ả':'a',
+    'ẹ':'e','ẻ':'e','ẽ':'e','Ẹ':'e','Ẻ':'e','Ẽ':'e',
+    'ọ':'o','ỏ':'o','Ọ':'o','Ỏ':'o',
+    'ụ':'u','ủ':'u','Ụ':'u','Ủ':'u',
+    'ị':'i','Ị':'i',
+    'Á':'a','À':'a','Â':'a','Ã':'a',
+    'Í':'i','Ì':'i',
+    'Ó':'o','Ò':'o','Ô':'o',
+    'Ú':'u','Ù':'u',
+    'Ý':'y',
+  };
+  return s.split('').map(ch => map[ch] || ch).join('').toLowerCase();
+}
 function fmtMoney(n){ return n.toLocaleString('vi-VN')+' ₫'; }
 
 function getFiltered(){
