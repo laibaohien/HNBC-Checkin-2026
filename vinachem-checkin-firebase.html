@@ -10,13 +10,13 @@
 ============================================================ -->
 <script>
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
+ apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
   authDomain: "vinachem-hnbc.firebaseapp.com",
   databaseURL: "https://vinachem-hnbc-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "vinachem-hnbc",
   storageBucket: "vinachem-hnbc.firebasestorage.app",
   messagingSenderId: "1038200335558",
-  appId: "1:1038200335558:web:69c5585956c2d452ee7bc7",
+  appId: "1:1038200335558:web:ccd476276551a53dee7bc7",
 };
 const EVENT_ID = "hoinghi_baochi_2025";
 
@@ -320,18 +320,6 @@ input::placeholder{color:#4a6077}
       <button class="ftab"        id="fg-done"     onclick="setGiftFilter('done')">Đã trao quà</button>
     </div>
 
-    <!-- PRESET: gift -->
-    <div id="preset-row" class="preset-row hidden">
-      <div class="preset-row-label">⚡ Mức quà mặc định:</div>
-      <div class="preset-btns">
-        <button class="preset-btn active-p" id="pr-500k" onclick="setPreset(500000)">500.000 ₫</button>
-        <button class="preset-btn" id="pr-1m"   onclick="setPreset(1000000)">1.000.000 ₫</button>
-        <button class="preset-btn" id="pr-2m"   onclick="setPreset(2000000)">2.000.000 ₫</button>
-        <button class="preset-btn" id="pr-3m"   onclick="setPreset(3000000)">3.000.000 ₫</button>
-        <button class="preset-btn" id="pr-5m"   onclick="setPreset(5000000)">5.000.000 ₫</button>
-      </div>
-    </div>
-
     <div class="guest-list" id="guest-list"></div>
     <div class="footer">Vinachem · Hội nghị Báo chí · Ban Truyền thông &amp; Phát triển</div>
   </div>
@@ -341,73 +329,79 @@ input::placeholder{color:#4a6077}
 /* ══════════════════════════════════════
    GUEST DATA
 ══════════════════════════════════════ */
+// ============================================================
+//  BƯỚC 3: Dữ liệu khách mời — trích xuất từ file Excel
+//  Cột 5: Giá trị quà tặng (đơn vị: đồng VND)
+//  Để điều chỉnh: sửa số cuối mỗi dòng
+// ============================================================
 const GUESTS = [
-  [1,"Ông Lê Quốc Minh","Ủy viên TW Đảng, Tổng BT Báo Nhân Dân, Chủ tịch Hội Nhà báo VN","Báo Nhân Dân"],
-  [2,"Bà Đinh Thị Mai","Phó trưởng Ban Tuyên giáo và Dân vận Trung ương","Ban Tuyên giáo TW"],
-  [3,"Ông Nguyễn Đức Lợi","Phó Chủ tịch thường trực Hội Nhà báo Việt Nam","Hội Nhà báo VN"],
-  [4,"Nhà báo Thuận Hữu","Nguyên Tổng BT Báo Nhân Dân, Phó Ban Tuyên giáo TW","Báo Nhân Dân"],
-  [5,"Ông Nguyễn Văn Hùng","Nguyên Vụ trưởng Vụ báo chí, Ban tuyên giáo Trung ương","Ban Tuyên giáo"],
-  [6,"Ông Lưu Đình Phúc","Cục trưởng Cục Báo chí – Bộ VH, Thể thao & Du lịch","Bộ VH-TT&DL"],
-  [7,"Bà Đặng Thị Phương Thảo","Phó Cục trưởng Cục Báo chí – Bộ VH, Thể thao & Du lịch","Bộ VH-TT&DL"],
-  [8,"Ông Nguyễn Thanh Lâm","Tổng Giám đốc Đài Truyền hình Quốc gia","Đài THQG"],
-  [9,"Ông Nguyễn Hồng Sâm","Tổng GĐ Cổng TTĐT Chính phủ, Tổng BT Báo ĐT Chính phủ","Báo ĐT Chính phủ"],
-  [10,"Bà Phan Thị Thùy Trâm","Phó Tổng GĐ Cổng Thông tin điện tử Chính phủ","Cổng TTĐT CP"],
-  [11,"Ông Phạm Chí Thanh","Chánh Văn phòng – Bộ Tài chính","Bộ Tài chính"],
-  [12,"Ông Phạm Minh Tuấn","Phó Chánh Văn phòng – Bộ Tài chính","Bộ Tài chính"],
-  [13,"Bà Mai Thị Hằng Thu","Phó Trưởng Phòng Truyền thông – Bộ Tài chính","Bộ Tài chính"],
-  [14,"Ông Quế Đình Nguyên","Phó Tổng Biên tập Báo Nhân Dân","Báo Nhân Dân"],
-  [15,"Ông Phan Văn Hùng","Phó Tổng Biên tập Báo Nhân Dân","Báo Nhân Dân"],
-  [16,"Ông Phùng Công Sưởng","Tổng Biên tập Báo Tiền Phong","Báo Tiền Phong"],
-  [17,"Ông Lê Minh Toản","Phó Tổng Biên tập Báo Tiền Phong","Báo Tiền Phong"],
-  [18,"Ông Nguyễn Ngọc Toàn","Tổng Biên tập Báo Thanh Niên","Báo Thanh Niên"],
-  [19,"Ông Phạm Văn Hoành","Tổng Biên tập Báo Tài chính Đầu tư","Báo TC Đầu tư"],
-  [20,"Ông Lê Trọng Minh","Phó Tổng BT Báo Tài chính Đầu tư","Báo TC Đầu tư"],
-  [21,"Ông Ngô Chí Tùng","Phó Tổng BT Báo Tài chính Đầu tư","Báo TC Đầu tư"],
-  [22,"Ông Phạm Thu Phong","Tổng BT Tạp chí Kinh tế – Tài chính","Tạp chí KT-TC"],
-  [23,"Ông Trần Đức Vinh","Tổng Biên tập Báo Công lý","Báo Công lý"],
-  [24,"Ông Phạm Tuấn Anh","Tổng Biên tập Báo Dân trí","Báo Dân trí"],
-  [25,"Thượng tá Nguyễn Thanh Bình","Tổng Biên tập Báo Công an Nhân dân","Báo CAND"],
-  [26,"Ông Dương Đức Đà Trang","Báo Tuổi Trẻ TP.HCM","Báo Tuổi Trẻ"],
-  [27,"Ông Lê Thế Chữ","Tổng Biên tập Báo Tuổi Trẻ TP.HCM","Báo Tuổi Trẻ"],
-  [28,"Ông Phạm Quốc Huy","Tổng BT Tạp chí Đời sống Pháp luật","Tạp chí ĐSPL"],
-  [29,"Ông Nguyễn Ngọc Hiển","Tổng Biên tập Báo Lao Động","Báo Lao Động"],
-  [30,"Ông Nguyễn Đức Thành","Phó Tổng Biên tập Báo Lao Động","Báo Lao Động"],
-  [31,"Ông Vũ Hoài Nam","Tổng Biên tập Báo Pháp luật Việt Nam","Báo PLVN"],
-  [32,"Ông Nguyễn Văn Bá","Tổng Biên tập Báo Vietnamnet","Báo Vietnamnet"],
-  [33,"Ông Phạm Văn Hiếu","Tổng Biên tập Báo VnExpress","Báo VnExpress"],
-  [34,"Ông Lê Trần Nguyên Huy","Tổng BT Báo Nhà báo và Công luận","Báo NB&CL"],
-  [35,"Ông Trương Thành Trung","Tổng Biên tập Báo Đại Đoàn Kết","Báo Đại Đoàn Kết"],
-  [36,"Ông Nguyễn Văn Dũng","Phó Tổng BT Báo Đại Đoàn Kết","Báo Đại Đoàn Kết"],
-  [37,"Ông Nguyễn Tuấn Anh","Tổng Biên tập Báo Thanh Tra","Báo Thanh Tra"],
-  [38,"Ông Chu Văn Thủy","Phó Tổng Biên tập Báo Thanh Tra","Báo Thanh Tra"],
-  [39,"Ông Nguyễn Văn Hoài","Tổng BT Báo Nông thôn Ngày nay","Báo NTNN"],
-  [40,"Ông Nguyễn Văn Minh","Tổng Biên tập Báo Công Thương","Báo Công Thương"],
-  [41,"Ông Nguyễn Tiến Cường","Phó Tổng BT Báo Công Thương","Báo Công Thương"],
-  [42,"Bà Phạm Thị Lệ Nhung","Tổng BT Tạp chí Công Thương","Tạp chí CT"],
-  [43,"Ông Nguyễn Văn Thắng","Tổng BT Báo Bảo vệ Pháp luật","Báo BVPL"],
-  [44,"Ông Nguyễn Ngọc Thạch","Tổng BT Báo Nông nghiệp & Môi trường","Báo NN&MT"],
-  [45,"Ông Lê Trọng Đảm","Phó Tổng BT Báo Nông nghiệp & Môi trường","Báo NN&MT"],
-  [46,"Bà Phạm Thị Thanh Huyền","Tổng BT Báo Đại biểu Nhân dân","Báo ĐBND"],
-  [47,"Bà Nguyễn Thị Quỳnh Minh","Tổng Biên tập Báo Kiểm toán","Báo Kiểm toán"],
-  [48,"Bà Chử Thị Hạnh","Tổng BT Tạp chí Kinh tế Việt Nam","Tạp chí KTVN"],
-  [49,"Ông Lưu Quang Vĩnh","Phó TBT Tạp chí Năng lượng sạch VN","Tạp chí NLSVN"],
-  [50,"Ông Trần Tiến Duẩn","Tổng biên tập Báo Vietnamplus","Báo Vietnamplus"],
-  [51,"Bà Vũ Thanh Thủy","Tổng biên tập Thời báo VTV","Thời báo VTV"],
-  [52,"Ông Hoàng Văn Vững","Tổng BT Tạp chí Tiếp thị & Gia đình","Tạp chí TT&GĐ"],
-  [53,"Ông Vũ Đức Thuận","Tổng BT Tạp chí Thương hiệu & Công luận","Tạp chí TH&CL"],
-  [54,"Ông Nguyễn Linh Anh","Tổng BT Tạp chí Diễn đàn Doanh nghiệp","Tạp chí DĐDN"],
-  [55,"Ông Nguyễn Đăng Học","Trưởng Ban Chương trình, Đài THVN","Đài THVN"],
-  [56,"Ông Nguyễn Hồng Phúc","Phó Trưởng Ban Thời sự, Đài THVN","Đài THVN"],
-  [57,"Bà Nguyễn Phương Mai","Trưởng Ban Thời sự, Đài THVN","Đài THVN"],
-  [58,"Trung tá Chu Quốc Dũng","Trưởng BBT Báo An ninh Thủ đô","Báo ANTĐ"],
-  [59,"Ông Trần Ngọc Tú","Trưởng BBT tin trong nước, TTXVN","TTXVN"],
-  [60,"Ông Phạm Quang Minh","Giám đốc Báo CafeF","Báo CafeF"],
-  [61,"Phóng viên A Huân","Phóng viên","—"],
-  [62,"Phóng viên C Duyên","Phóng viên","—"],
-  [63,"Phóng viên C Bản","Phóng viên","—"],
-  [64,"Phóng viên Châm","Phóng viên","—"],
-  [65,"A Linh","Phó Ban – Thời báo VTV","Thời báo VTV"],
-  [66,"Thái","Phó Ban – Báo TC&ĐT","Báo TC Đầu tư"],
+  // [STT, Họ tên, Chức danh, Cơ quan, Giá trị quà]
+  [1,"Ông Lê Quốc Minh","Ủy viên Trung ương Đảng, Tổng Biên tập Báo Nhân Dân, Phó Trưởng Ban Tuyên giáo và Dân vận Trung ương, Chủ tịch Hội Nhà báo Việt Nam","Báo Nhân Dân",20000000],
+  [2,"Bà Đinh Thị Mai","Phó trưởng Ban Tuyên giáo và Dân vận Trung ương","Ban Tuyên giáo TW",20000000],
+  [3,"Ông Nguyễn Đức Lợi","Phó Chủ tịch thường trực Hội Nhà báo Việt Nam","Hội Nhà báo Việt Nam",10000000],
+  [4,"Nhà báo Thuận Hữu","Nguyên Tổng Biên tập Báo Nhân Dân, Phó Ban Tuyên giáo Trung ương","Báo Nhân Dân",10000000],
+  [5,"Ông Nguyễn Văn Hùng","Nguyên Vụ trưởng Vụ báo chí, Ban tuyên giáo Trung ương","—",10000000],
+  [6,"Ông Lưu Đình Phúc","Cục trưởng Cục Báo chí - Bộ Văn hóa, Thể thao & Du lịch","Cục Báo chí - BVH",10000000],
+  [7,"Bà Đặng Thị Phương Thảo","Phó cục trưởng Cục Báo chí - Bộ Văn hóa, Thể thao & Du lịch","Cục Báo chí - BVH",10000000],
+  [8,"Ông Nguyễn Thanh Lâm","Tổng giám đốc Đài truyền hình quốc gia","Đài truyền hình quốc gia",10000000],
+  [9,"Ông Nguyễn Hồng Sâm","Tổng Giám đốc Cổng thông tin điện tử Chính phủ, Tổng Biên tập Báo Điện tử Chính phủ","Báo Điện tử Chính phủ",10000000],
+  [10,"Bà Phan Thị Thùy Trâm","Phó Tổng giám đốc Cổng thông tin điện tử Chính phủ","Cổng TTĐT Chính phủ",10000000],
+  [11,"Ông Phạm Chí Thanh","Chánh Văn phòng - Bộ Tài chính","Bộ Tài chính",5000000],
+  [12,"Ông Phạm Minh Tuấn","Phó Chánh Văn phòng - Bộ Tài chính","Bộ Tài chính",3000000],
+  [13,"Bà Mai Thị Hằng Thu","Phó Trưởng Phòng Truyền thông - Bộ Tài chính","Bộ Tài chính",3000000],
+  [14,"Ông Quế Đình Nguyên","Phó Tổng Biên Tập Báo Nhân dân","Báo Nhân dân",5000000],
+  [15,"Ông Phan Văn Hùng","Phó tổng biên tập Báo Nhân Dân","Báo Nhân Dân",10000000],
+  [16,"Ông Phùng Công Sưởng","Tổng Biên tập Báo Tiền Phong","Báo Tiền Phong",5000000],
+  [17,"Ông Lê Minh Toản","Phó Tổng Biên tập Báo Tiền phong","Báo Tiền phong",3000000],
+  [18,"Ông Nguyễn Ngọc Toàn","Tổng Biên tập Báo Thanh niên","Báo Thanh niên",5000000],
+  [19,"Ông Phạm Văn Hoành","Tổng Biên tập Báo Tài chính Đầu tư","Báo Tài chính Đầu tư",5000000],
+  [20,"Ông Lê Trọng Minh","Phó Tổng Biên tập Báo Tài chính Đầu tư","Báo Tài chính Đầu tư",3000000],
+  [21,"Ông Ngô Chí Tùng","Phó Tổng Biên tập Báo Tài chính Đầu tư","Báo Tài chính Đầu tư",3000000],
+  [22,"Ông Phạm Thu Phong","Tổng Biên tập Tạp chí Kinh tế - Tài chính","Tạp chí KT-TC",5000000],
+  [23,"Ông Trần Đức Vinh","Tổng Biên tập Báo Công lý","Báo Công lý",5000000],
+  [24,"Ông Phạm Tuấn Anh","Tổng Biên tập Báo Dân trí","Báo Dân trí",5000000],
+  [25,"Đại tá Nguyễn Thanh Bình","Tổng Biên tập Báo Công an Nhân dân","Báo Công an Nhân dân",5000000],
+  [26,"Ông Dương Đức Đà Trang","Báo Tuổi trẻ TP HCM","Báo Tuổi trẻ TP HCM",3000000],
+  [27,"Ông Lê Thế Chữ","Tổng Biên tập Báo Tuổi trẻ TP HCM","Báo Tuổi trẻ TP HCM",5000000],
+  [28,"Ông Phạm Quốc Huy","Tổng Biên tập Tạp chí Đời sống Pháp luật","Tạp chí ĐSPL",5000000],
+  [29,"Ông Nguyễn Ngọc Hiển","Tổng Biên tập Báo Lao động","Báo Lao động",5000000],
+  [30,"Ông Nguyễn Đức Thành","Phó Tổng Biên tập Báo Lao động","Báo Lao động",3000000],
+  [31,"Ông Vũ Hoài Nam","Tổng Biên tập Báo Pháp luật Việt Nam","Báo Pháp luật Việt Nam",5000000],
+  [32,"Ông Nguyễn Văn Bá","Tổng Biên tập Báo Vietnamnet","Báo Vietnamnet",5000000],
+  [33,"Ông Phạm Văn Hiếu","Tổng Biên tập Báo VnExpress","Báo VnExpress",5000000],
+  [34,"Ông Lê Trần Nguyên Huy","Tổng Biên tập Báo Nhà báo và Công luận","Báo Nhà báo và Công luận",5000000],
+  [35,"Ông Trương Thành Trung","Tổng Biên tập Báo Đại đoàn kết","Báo Đại đoàn kết",5000000],
+  [36,"Ông Nguyễn Văn Dũng","Phó Tổng Biên tập Báo Đại đoàn kết","Báo Đại đoàn kết",3000000],
+  [37,"Ông Nguyễn Tuấn Anh","Tổng Biên tập Báo Thanh tra","Báo Thanh tra",5000000],
+  [38,"Ông Chu Văn Thủy","Phó Tổng Biên tập Báo Thanh tra","Báo Thanh tra",3000000],
+  [39,"Ông Nguyễn Văn Hoài","Tổng Biên tập Báo Nông thôn Ngày nay","Báo Nông thôn Ngày nay",3000000],
+  [40,"Ông Nguyễn Văn Minh","Tổng Biên tập Báo Công Thương","Báo Công Thương",5000000],
+  [41,"Ông Nguyễn Tiến Cường","Phó Tổng Biên tập Báo Công Thương","Báo Công Thương",3000000],
+  [42,"Bà Phạm Thị Lệ Nhung","Tổng Biên tập Tạp chí Công Thương","Tạp chí Công Thương",5000000],
+  [43,"Ông Nguyễn Văn Thắng","Tổng Biên tập Báo Bảo vệ Pháp luật","Báo Bảo vệ Pháp luật",5000000],
+  [44,"Ông Nguyễn Ngọc Thạch","Tổng Biên tập Báo Nông nghiệp & Môi trường","Báo NN&MT",5000000],
+  [45,"Ông Lê Trọng Đảm","Phó Tổng Biên tập Báo Nông nghiệp & Môi trường","Báo NN&MT",3000000],
+  [46,"Bà Phạm Thị Thanh Huyền","Tổng Biên tập Báo Đại biểu Nhân dân","Báo Đại biểu Nhân dân",5000000],
+  [47,"Bà Nguyễn Thị Quỳnh Minh","Tổng Biên tập Báo Kiểm toán","Báo Kiểm toán",5000000],
+  [48,"Bà Chử Thị Hạnh","Tổng Biên tập Tạp chí Kinh tế Việt Nam","Tạp chí Kinh tế Việt Nam",3000000],
+  [49,"Ông Lưu Quang Vĩnh","Phó Tổng biên tập Tạp chí Năng lượng sạch Việt Nam","Tạp chí NL sạch VN",3000000],
+  [50,"Ông Trần Tiến Duẩn","Tổng biên tập Báo Vietnamplus+","Báo Vietnamplus+",5000000],
+  [51,"Bà Vũ Thanh Thủy","Tổng biên tập Thời báo VTV","Thời báo VTV",5000000],
+  [52,"Ông Hoàng Văn Vững","Tổng Biên tập Tạp chí Tiếp thị & Gia đình","Tạp chí TT&GĐ",5000000],
+  [53,"Ông Vũ Đức Thuận","Tổng biên tập Tạp chí Thương hiệu & Công luận","Tạp chí TH&CL",3000000],
+  [54,"Ông Nguyễn Linh Anh","Tổng biên tập Tạp chí Diễn đàn Doanh nghiệp","Tạp chí DĐDN",3000000],
+  [55,"Ông Nguyễn Đăng Học","Trưởng Ban Chương trình Đài Truyền hình Việt Nam","Đài Truyền hình Việt Nam",5000000],
+  [56,"Ông Nguyễn Hồng Phúc","Phó Trưởng Ban Thời sự Đài Truyền hình Việt Nam","Đài Truyền hình Việt Nam",5000000],
+  [57,"Bà Nguyễn Phương Mai","Trưởng Ban Thời sự, Đài truyền hình Việt Nam","Đài truyền hình Việt Nam",5000000],
+  [58,"Trung tá Chu Quốc Dũng","Trưởng Ban biên tập Báo An ninh Thủ đô","Báo An ninh Thủ đô",5000000],
+  [59,"Ông Trần Ngọc Tú","Trưởng Ban Biên tập tin trong nước, Thông tấn xã Việt Nam","Thông tấn xã Việt Nam",5000000],
+  [60,"Ông Phạm Quang Minh","Giám đốc Báo CafeF","Báo CafeF",5000000],
+  [61,"Phóng viên (A Huân)","Phóng viên","Phóng viên",1000000],
+  [62,"Phóng viên (C Duyên)","Phóng viên","Phóng viên",1000000],
+  [63,"Phóng viên (C Bản)","Phóng viên","Phóng viên",1000000],
+  [64,"Phóng viên (Châm)","Phóng viên","Phóng viên",1000000],
+  [65,"Phó Ban (A Linh - Thời báo VTV)","Phóng viên","Thời báo VTV",2000000],
+  [66,"Phó Ban (Thái - Báo TC&ĐT)","Phóng viên","Báo TC&ĐT",1000000],
 ];
 
 /* ══════════════════════════════════════
@@ -419,8 +413,6 @@ let gifts        = {};
 let filterMode   = 'all';
 let giftFilter   = 'all';
 let searchQ      = '';
-let defaultPreset= 500000;
-let pendingGift  = {};
 let toastTimer   = null;
 let db           = null;
 let fbListeners  = [];
@@ -489,7 +481,7 @@ function enterApp(role){
     document.getElementById('ctr-lbl').textContent = 'Đã check-in';
   } else if(role === 'gift'){
     hide('stats-checkin'); show('stats-gift'); hide('readonly-notice');
-    hide('filter-checkin'); show('filter-gift'); show('preset-row');
+    hide('filter-checkin'); show('filter-gift'); hide('preset-row');
     document.getElementById('ctr-lbl').textContent = 'Đã trao quà';
   } else {
     show('stats-checkin'); hide('stats-gift'); show('readonly-notice');
@@ -507,7 +499,7 @@ function logout(){
   fbListeners = [];
   currentRole = null;
   selectedRole = null;
-  checkedIn = {}; gifts = {}; pendingGift = {};
+  checkedIn = {}; gifts = {};
   searchQ = ''; filterMode = 'all'; giftFilter = 'all';
   document.getElementById('search-inp').value = '';
   document.getElementById('pin-input').value = '';
@@ -578,12 +570,10 @@ function toggleGuest(stt){
 
 function saveGift(stt){
   if(currentRole !== 'gift') return;
-  const el = document.getElementById('gi-'+stt);
-  if(!el) return;
-  const amount = parseInt(el.value.replace(/[^\d]/g,'')) || 0;
-  if(amount<=0){ alert('Vui lòng nhập số tiền hợp lệ'); return; }
+  const g = GUESTS.find(x => x[0]===stt);
+  if(!g) return;
+  const amount = g[4] || 0;
   gifts[stt] = amount;
-  delete pendingGift[stt];
   showToast(stt,'gift');
   render();
   writeGift(stt, amount);
@@ -594,24 +584,6 @@ function removeGift(stt){
   delete gifts[stt];
   render();
   writeGift(stt, null);
-}
-
-function onGiftInput(stt){
-  const el = document.getElementById('gi-'+stt);
-  if(el) pendingGift[stt] = el.value;
-}
-
-function setPreset(val){
-  defaultPreset = val;
-  const map={500000:'pr-500k',1000000:'pr-1m',2000000:'pr-2m',3000000:'pr-3m',5000000:'pr-5m'};
-  Object.entries(map).forEach(([v,id])=>{
-    const el=document.getElementById(id);
-    if(el) el.className='preset-btn'+(parseInt(v)===val?' active-p':'');
-  });
-  GUESTS.forEach(g=>{
-    const el=document.getElementById('gi-'+g[0]);
-    if(el && !pendingGift[g[0]]) el.value=val.toLocaleString('vi-VN');
-  });
 }
 
 function showToast(stt,type){
@@ -650,7 +622,7 @@ function fmtMoney(n){ return n.toLocaleString('vi-VN')+' ₫'; }
 
 function getFiltered(){
   let list=GUESTS;
-  if(searchQ.trim()){ const q=norm(searchQ.trim()); list=list.filter(g=>norm(g[1]).includes(q)||norm(g[2]).includes(q)||norm(g[3]).includes(q)); }
+  if(searchQ.trim()){ const q=norm(searchQ.trim()); list=list.filter(g=>String(g[0]).includes(q.replace(/[^0-9]/g,''))||norm(g[1]).includes(q)||norm(g[2]).includes(q)||norm(g[3]).includes(q)); }
   if(currentRole==='gift'){
     list=list.filter(g=>!!checkedIn[g[0]]);
     if(giftFilter==='done')    list=list.filter(g=>!!gifts[g[0]]);
@@ -731,17 +703,15 @@ function render(){
         <div class="gift-done-badge" onclick="removeGift(${g[0]})" title="Bấm để sửa">🎁 ${fmtMoney(giftAmt)} <span style="font-size:10px;opacity:.5;margin-left:4px">✎</span></div>
       </div>`;
 
-    const curVal = pendingGift[g[0]]!==undefined ? pendingGift[g[0]] : defaultPreset.toLocaleString('vi-VN');
+    const presetAmt = g[4] || 0;
     return `
       <div class="guest-card is-in">
         <div class="stt-badge">${g[0]}</div>
         <div class="g-info"><div class="g-name">${g[1]}</div><div class="g-title">${g[2]}</div></div>
+        <div class="org-pill">${g[3]}</div>
         <div class="gift-col">
-          <input class="gift-amount-input" id="gi-${g[0]}" value="${curVal}"
-            oninput="onGiftInput(${g[0]})"
-            onkeydown="if(event.key==='Enter') saveGift(${g[0]})"
-            placeholder="Số tiền (₫)">
-          <button class="gift-save-btn" onclick="saveGift(${g[0]})">🎁 Trao quà</button>
+          <span style="font-size:12px;color:#ce93d8;font-weight:600;white-space:nowrap">${fmtMoney(presetAmt)}</span>
+          <button class="gift-save-btn" onclick="saveGift(${g[0]})">🎁 Xác nhận trao</button>
         </div>
       </div>`;
   }).join('');
