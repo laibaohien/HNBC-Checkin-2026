@@ -10,13 +10,13 @@
 ============================================================ -->
 <script>
 const FIREBASE_CONFIG = {
- apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
-  authDomain: "vinachem-hnbc.firebaseapp.com",
-  databaseURL: "https://vinachem-hnbc-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "vinachem-hnbc",
-  storageBucket: "vinachem-hnbc.firebasestorage.app",
-  messagingSenderId: "1038200335558",
-  appId: "1:1038200335558:web:ccd476276551a53dee7bc7",
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE",
 };
 const EVENT_ID = "hoinghi_baochi_2025";
 
@@ -526,20 +526,45 @@ function initFirebase(){
     setSyncState('connecting','Đang kết nối Firebase...');
 
     const base = `events/${EVENT_ID}`;
+    // Normalize Firebase string keys → number keys để tránh type mismatch
+    function normalizeKeys(obj){
+      if(!obj) return {};
+      const out = {};
+      Object.entries(obj).forEach(([k,v]) => { out[parseInt(k)] = v; });
+      return out;
+    }
+
     const offC = db.ref(`${base}/checkin`).on('value', snap=>{
-      checkedIn = snap.val() || {};
-      setSyncState('ok','Firebase Realtime · '+new Date().toLocaleTimeString('vi-VN'));
+      checkedIn = normalizeKeys(snap.val());
+      setSyncState('ok','Realtime · Cập nhật '+new Date().toLocaleTimeString('vi-VN'));
       render();
-    }, err=>setSyncState('error','Lỗi: '+err.message));
+    }, err=>setSyncState('error','Lỗi kết nối: '+err.message));
 
     const offG = db.ref(`${base}/gifts`).on('value', snap=>{
-      gifts = snap.val() || {};
+      gifts = normalizeKeys(snap.val());
       render();
     });
 
     // Lưu hàm detach để dùng khi logout
     fbListeners.push(()=> db.ref(`${base}/checkin`).off('value', offC));
     fbListeners.push(()=> db.ref(`${base}/gifts`).off('value', offG));
+
+    // Polling fallback mỗi 5s — đảm bảo luôn đồng bộ kể cả khi push bị ngắt
+    const pollTimer = setInterval(async ()=>{
+      try {
+        const [snapC, snapG] = await Promise.all([
+          db.ref(`${base}/checkin`).get(),
+          db.ref(`${base}/gifts`).get()
+        ]);
+        const newC = normalizeKeys(snapC.val());
+        const newG = normalizeKeys(snapG.val());
+        let changed = false;
+        if(JSON.stringify(newC) !== JSON.stringify(checkedIn)){ checkedIn = newC; changed = true; }
+        if(JSON.stringify(newG) !== JSON.stringify(gifts)){ gifts = newG; changed = true; }
+        if(changed){ render(); setSyncState('ok','Realtime · '+new Date().toLocaleTimeString('vi-VN')); }
+      } catch(e){}
+    }, 5000);
+    fbListeners.push(()=> clearInterval(pollTimer));
 
   } catch(e){ setSyncState('error','Lỗi Firebase: '+e.message); }
 }
