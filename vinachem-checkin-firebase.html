@@ -10,13 +10,13 @@
 ============================================================ -->
 <script>
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDLCYRrvlUo4p_HcU3KrpucWy3bg04hzro",
-  authDomain: "vinachem-hnbc.firebaseapp.com",
-  databaseURL: "https://vinachem-hnbc-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "vinachem-hnbc",
-  storageBucket: "vinachem-hnbc.firebasestorage.app",
-  messagingSenderId: "1038200335558",
-  appId: "1:1038200335558:web:69c5585956c2d452ee7bc7",
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE",
 };
 const EVENT_ID = "hoinghi_baochi_2025";
 
@@ -650,7 +650,16 @@ function fmtMoney(n){ return n.toLocaleString('vi-VN')+' ₫'; }
 
 function getFiltered(){
   let list=GUESTS;
-  if(searchQ.trim()){ const q=norm(searchQ.trim()); list=list.filter(g=>String(g[0]).includes(q.replace(/[^0-9]/g,''))||norm(g[1]).includes(q)||norm(g[2]).includes(q)||norm(g[3]).includes(q)); }
+  if(searchQ.trim()){
+    const q = norm(searchQ.trim());
+    const isNumber = /^\d+$/.test(q.trim());
+    list = list.filter(g =>
+      (isNumber && String(g[0]) === q.trim()) ||   // tìm đúng số thứ tự
+      norm(g[1]).includes(q) ||                     // tên khách
+      norm(g[2]).includes(q) ||                     // chức danh
+      norm(g[3]).includes(q)                        // tên báo / cơ quan
+    );
+  }
   if(currentRole==='gift'){
     list=list.filter(g=>!!checkedIn[g[0]]);
     if(giftFilter==='done')    list=list.filter(g=>!!gifts[g[0]]);
